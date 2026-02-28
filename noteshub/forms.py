@@ -4,7 +4,6 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django.core.exceptions import ValidationError
 from .models import CustomUser, Notes
-import magic    
 
 class CustomUserCreationForm(UserCreationForm):
     class Meta:
@@ -75,15 +74,12 @@ class NotesUploadForm(forms.ModelForm):
     def clean_pdf(self):
         pdf = self.cleaned_data.get('pdf')
         if pdf:
-            # Check file type
-            file_type = magic.from_buffer(pdf.read(2048), mime=True)
-            if file_type != 'application/pdf':
+            header = pdf.read(5)
+            if header != b'%PDF-':
                 raise ValidationError('Only PDF files are allowed.')
 
-            # Reset file pointer
             pdf.seek(0)
 
-            # Check file size (10MB max)
             if pdf.size > 10 * 1024 * 1024:
                 raise ValidationError('File size must be less than 10MB.')
 
